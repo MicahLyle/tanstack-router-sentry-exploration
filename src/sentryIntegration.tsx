@@ -1,18 +1,20 @@
+import { WINDOW, startBrowserTracingNavigationSpan, startBrowserTracingPageLoadSpan } from "@sentry/browser";
 import {
-    SEMANTIC_ATTRIBUTE_SENTRY_OP,
-    SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
-    SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
+	SEMANTIC_ATTRIBUTE_SENTRY_OP,
+	SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
+	SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
 } from "@sentry/core";
-import { startBrowserTracingNavigationSpan } from "@sentry/react";
 
 import { browserTracingIntegration as originalBrowserTracingIntegration } from "@sentry/react";
-import type { Client, Integration, TransactionSource } from "@sentry/types";
+import type { Client, Integration } from "@sentry/types";
+
+import type { TanstackRouter } from "./types";
 
 /**
- * A custom browser tracing integration for Next.js.
+ * A custom browser tracing integration for Tanstack Router.
  */
 export function tanstackRouterBrowserTracingIntegration(
-	router: any,
+	router: TanstackRouter,
 	options: Parameters<typeof originalBrowserTracingIntegration>[0] = {}
 ): Integration {
 	const browserTracingIntegrationInstance = originalBrowserTracingIntegration({
@@ -26,6 +28,18 @@ export function tanstackRouterBrowserTracingIntegration(
 	return {
 		...browserTracingIntegrationInstance,
 		afterAllSetup(client) {
+			const initPathName = WINDOW && WINDOW.location && WINDOW.location.pathname;
+			if (instrumentPageLoad && initPathName) {
+				startBrowserTracingPageLoadSpan(client, {
+					name: initPathName,
+					attributes: {
+						[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "url",
+						[SEMANTIC_ATTRIBUTE_SENTRY_OP]: "pageload",
+						[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: "auto.pageload.react.tanstack_router",
+					},
+				});
+			}
+
 			if (instrumentNavigation) {
 				tanstackRouterInstrumentNavigation(router, client);
 			}
@@ -35,39 +49,22 @@ export function tanstackRouterBrowserTracingIntegration(
 	};
 }
 
-export function tanstackRouterInstrumentNavigation(router: any, client: Client): void {
-	router.history.notify(() => {
-		console.log("Notify result");
-	});
-
+export function tanstackRouterInstrumentNavigation(router: TanstackRouter, client: Client): void {
 	router.history.subscribe(() => {
-		console.log("Subscribe result");
-
-		let newLocation: string;
-		let spanSource: TransactionSource;
-
 		const state = router.state;
 		const matches = state.pendingMatches ?? state.matches;
-		const length = matches.length;
 		const lastMatch = matches[matches.length - 1];
 		if (!lastMatch) return;
+
 		const routeId = lastMatch?.routeId;
-
-		newLocation = routeId;
-		spanSource = "route";
-
-		console.log(matches);
-		console.log(lastMatch);
-		console.log("duck");
-		console.log(newLocation);
-		console.log(spanSource);
+		if (!routeId) return;
 
 		startBrowserTracingNavigationSpan(client, {
-			name: newLocation,
+			name: routeId,
 			attributes: {
 				[SEMANTIC_ATTRIBUTE_SENTRY_OP]: "navigation",
 				[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: "auto.navigation.tanstack_router.router_instrumentation",
-				[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: spanSource,
+				[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "route",
 			},
 		});
 	});

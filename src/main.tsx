@@ -3,7 +3,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
-import { tanstackRouterBrowserTracingIntegration } from "./sentryTanstackRouterIntegration";
+import { tanstackRouterBrowserTracingIntegration } from "./sentryIntegration";
 
 // Set up a Router instance
 const router = createRouter({
