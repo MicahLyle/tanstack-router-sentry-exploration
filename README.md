@@ -2,7 +2,7 @@
 
 ## Background
 
-This is a sample project I used to start on the [initial PR]()
+This is a sample project I used to start on the [initial PR](https://github.com/getsentry/sentry-javascript/pull/12095)
 for integrating [Tanstack Router](https://tanstack.com/router/latest) more deeply into [Sentry for React](https://docs.sentry.io/platforms/javascript/guides/react/).
 
 ## Installation and Setup
