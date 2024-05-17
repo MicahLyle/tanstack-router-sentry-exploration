@@ -5,12 +5,16 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), TanStackRouterVite(), sentryVitePlugin({
-        org: "tanstack-router-integration",
-        project: "javascript-react"
-    })],
+	plugins: [
+		react(),
+		TanStackRouterVite(),
+		sentryVitePlugin({
+			org: "tanstack-router-integration",
+			project: "javascript-react",
+		}),
+	],
 
-    build: {
-        sourcemap: true
-    }
+	build: {
+		sourcemap: true,
+	},
 });
